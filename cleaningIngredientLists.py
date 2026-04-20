@@ -269,6 +269,11 @@ ingredientLists["ingredientList"] = (ingredientLists.ingredientList.str.replace(
                                      .str.replace("This blend contains the following in their natural compositions Linalool", "Linalool", regex=False)
                                      .str.replace("natural ingredients including olive oil", "olive oil", regex=False)
                                      .str.replace("(Glycerin) Glycerin", "Glycerin", regex=False)
+                                     .str.replace(r"1.{1,4}2- ?([Hh]exane?d(io|oi)l|HEXANE?D(IO|OI)L)", "1,2-Hexanediol")
+                                     .str.replace(r"1, 2-([Hh]exanediol|HEXANEDIOL)", "1,2-Hexanediol")
+                                     .str.replace(r"([Zz]inc [Oo]xide|ZINC OXIDE)[^,]+?([Aa]llantoin|ALLANTOIN)", "Zinc Oxide, Allantoin")
+                                     .str.replace("Zinc Oxide (17.5%) Dimethicone", "Zinc Oxide, Dimethicone", regex=False)
+                                     .str.replace(r"1-([Hh]exadecanol [Aa]lcohol|HEXADECANOL ALCOHOL)", "1-Hexadecanol")
                                      )
 
 """Now I'm going to do some final editing of ingredient lists that's kind of
@@ -303,7 +308,7 @@ ingredientsDF = ingredientsDF.loc[ingredientsDF.ingredient2.str.contains(r"\w")]
 ingredientsDF.loc[ingredientsDF.ingredient2.str.contains(r"^\(") & ingredientsDF.ingredient2.str.contains(r"\)$"), "ingredient2"] = ingredientsDF.ingredient2.str.strip("()")
 ingredientsDF.loc[ingredientsDF.ingredient1 == "(Vitamin E) Oil", "ingredient2"] = "Vitamin E"
 ingredientsDF.loc[ingredientsDF.ingredient2.str.contains(r"^\(") & ingredientsDF.ingredient2.str.contains(r"\)( \w+)? ([Oo]il|OIL)"), "ingredient2"] = ingredientsDF.ingredient2.str.replace(r"[()]", "")
-ingredientsDF.loc[ingredientsDF.ingredient2.str.contains(r"^\((Vegetable|VEGETABLE)\) \w+$"), "ingredient2"] = ingredientsDF.ingredient2.str.replace(r"^\((Vegetable|VEGETABLE)\) ", "")
+ingredientsDF.loc[ingredientsDF.ingredient2.str.contains(r"^\(([Vv]egetable|VEGETABLE)\) \w+$"), "ingredient2"] = ingredientsDF.ingredient2.str.replace(r"^\(([Vv]egetable|VEGETABLE)\) ", "")
 ingredientsDF.loc[ingredientsDF.ingredient2 == "( +/-): Mica", "ingredient2"] = "Mica"
 ingredientsDF.loc[ingredientsDF.ingredient2 == "+/- ): Titanium Dioxide (CI 77891", "ingredient2"] = "Titanium Dioxide"
 ingredientsDF.loc[ingredientsDF.ingredient2.str.contains(r"^\): *"), "ingredient2"] = ingredientsDF.ingredient2.str.replace(r"^\): *", "")
@@ -434,7 +439,7 @@ notIngredients = ["Matte Duchess", "Mattes:", "(^) DENOTES AN ECOCERT-APPROVED I
                   "Certified organic/Certifié biologique", "Up Side Brown",
                   "/ Certified Fair Trade", "Vegan Fragrance Oil Extract",
                   "Locks in the moisture", "listed above Oil", "local plants",
-                  "Magic", "healing"
+                  "Magic", "healing", "ª´Fair Trade Ingredient"
                   ]
 ingredientsDF = ingredientsDF.query("ingredient2 != @notIngredients")
 
@@ -457,12 +462,18 @@ ingredientsDF.loc[ingredientsDF.ingredient2.str.contains(r"^(GLYCERIN|[Gg]lyceri
 ingredientsDF.loc[ingredientsDF.ingredient2 == "Gly -cerin", "ingredient2"] = "Glycerin"
 ingredientsDF.loc[ingredientsDF.ingredient2.str.contains(r"^(GLYCERINE|Glycerine) \([a-zA-Z]"), "ingredient2"] = "Glycerine"
 ingredientsDF.loc[ingredientsDF.ingredient2.str.contains('"', regex=False), "ingredient2"] = ingredientsDF.ingredient2.str.replace('"', '', regex=False)
+ingredientsDF.loc[ingredientsDF.ingredient2 == "2-Hexanediol", "ingredient2"] = "1,2-Hexanediol"
+ingredientsDF.loc[ingredientsDF.ingredient2 == "åÊ Carthamus Tinctorius (Safflower) Seed Oil", "ingredient2"] = "Safflower Seed Oil"
+ingredientsDF.loc[ingredientsDF.ingredient2 == "or Ferric Ferrocyanide", "ingredient2"] = "Ferric Ferrocyanide"
 ingredientsDF.ingredient2 = ingredientsDF.ingredient2.str.strip()
 
 startingSubstringRemove2 = r"^(\^ ?([Dd]enotes|DENOTES|USDA|Contains|Fair|sustainably)|pH |other|[Pp]arfum|PARFUM|[Pp]araben|Organic(?!\w)|lots|love|liquid|VR [\s\w]+:|habitat|Ho )"
 ingredientsDF = ingredientsDF.loc[~ingredientsDF.ingredient2.str.contains(startingSubstringRemove2)]
+startingSubstringRemove3 = r"^(we|or) "
+ingredientsDF = ingredientsDF.loc[~ingredientsDF.ingredient2.str.contains(startingSubstringRemove3)]
+ingredientsDF = ingredientsDF.loc[~ingredientsDF.ingredient2.str.contains(r"Fair Trade Ingredient$")]
 
-removeStartingSubstringOnly = r"^([Vv]egan |[Uu]nrefined (Certified |Organic |Raw )?|Untreated |Organic |This|Vegetable (?![Oo]il|[Pp]rotein)|Liquid|MATTES?: )"
+removeStartingSubstringOnly = r"^([Vv]egan |[Uu]nrefined (Certified |Organic |Raw )?|Untreated |Organic |This|[Vv]egetable (?![Oo]il|[Pp]rotein|[Pp]lacenta|[Ww]ax)|Liquid|MATTES?: )"
 ingredientsDF.loc[ingredientsDF.ingredient2.str.contains(removeStartingSubstringOnly), "ingredient2"] = ingredientsDF.ingredient2.str.replace(removeStartingSubstringOnly, "")
 ingredientsDF.ingredient2 = (ingredientsDF.ingredient2.str.strip()
                              .str.replace(r"(^[^\w]+|[^\w]+$)", "")
