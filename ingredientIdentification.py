@@ -124,6 +124,7 @@ ingredientCombos = (pd.read_excel(productDataPath, "List - ingredient combos",
                     )
 ingredients = (pd.read_excel(productDataPath, "Ingredients", dtype="string")
                .merge(identifiedIngredients, "left", left_on="ingredient2", right_on="ingredientName")
+               .rename(columns={"CASRN": "CompToxCASRN"})
                )
 
 """Let's create the following dataframes that will serve as the dataset to be
@@ -135,13 +136,13 @@ analyzed in the future
 data2022 = (products2022.merge(ingredientLists, "left", "ogIngredientList")
             .merge(ingredientCombos, "left", "ingredientList")
             .merge(ingredients, "left", ["ingredient1", "ingredient2"])
-            .drop(columns=["ogIngredientList", "ingredient1", "URL", "Leading product photo URL"])
+            .drop(columns=["ogIngredientList", "ingredient1", "URL", "Leading product photo URL", "ingredientName"])
             .drop_duplicates()
             )
 data2024 = (products2024.merge(ingredientLists, "left", "ogIngredientList")
             .merge(ingredientCombos, "left", "ingredientList")
             .merge(ingredients, "left", ["ingredient1", "ingredient2"])
-            .drop(columns=["ogIngredientList", "ingredient1", "Product URL", "Leading product photo URL"])
+            .drop(columns=["ogIngredientList", "ingredient1", "Product URL", "Leading product photo URL", "ingredientName"])
             .drop_duplicates()
             )
 # %%
